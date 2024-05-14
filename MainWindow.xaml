@@ -14,9 +14,7 @@
         <StackPanel Orientation="Horizontal">
             <Button Content="Начать запись" Width="120" Margin="20,10,0,10" Click="StartButtonClick" x:Name="StartButton" Height="21" IsEnabled="{Binding IsNotRecording}"/>
             <Button Content="Остановить запись" Width="120" Margin="10,10,20,10" IsEnabled="{Binding IsRecording}" Click="StopButtonClick" x:Name="StopButton" Height="21"/>
-            <ProgressBar Orientation="Horizontal" Minimum="0" Maximum="32768" x:Name="LevelProgressBar" Margin="10,0,0,0" Width="360" Value="{Binding Amplitude, Mode=OneWay}">
-                
-            </ProgressBar>
+            <ProgressBar Orientation="Horizontal" Minimum="0" Maximum="32768" x:Name="LevelProgressBar" Margin="10,0,0,0" Width="360" Value="{Binding Amplitude, Mode=OneWay}"/>
         </StackPanel>
 
     </DockPanel>

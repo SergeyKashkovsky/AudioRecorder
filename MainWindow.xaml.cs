@@ -43,8 +43,7 @@ namespace AudioRecorder
             var info = new FileInfo(Assembly.GetExecutingAssembly().Location);
 
             _fileName = String.Format(@"{0}\{1}.txt", info.Directory, DateTime.Now.ToString("yyyyMMddHHmmss"));
-            StopButton.IsEnabled = true;
-            StartButton.IsEnabled = false;
+            _viewModel.IsRecording = true;
             _viewModel.StatusText = String.Format("Начата запись в файл: {0}", _fileName);
             try
             {
@@ -80,9 +79,8 @@ namespace AudioRecorder
         /// <param name="e"></param>
         private void StopButtonClick(object sender, RoutedEventArgs e)
         {
+            _viewModel.IsRecording = false;
             _waveIn?.StopRecording();
-            StopButton.IsEnabled = false;
-            StartButton.IsEnabled = true;
             _viewModel.StatusText = String.Format("Запись в файл: {0} остановлена. Ожидание запуска", _fileName);
         }
         /// <summary>
@@ -102,10 +100,9 @@ namespace AudioRecorder
                 }
             }catch(Exception ex)
             {
+                _viewModel.IsRecording = false;
                 _viewModel.StatusText = String.Format("Ошибка {0}, останавливаю запись в файл {1}", ex.Message, _fileName);
                 _waveIn?.StopRecording();
-                StopButton.IsEnabled = false;
-                StartButton.IsEnabled = true;
             }
         }
         /// <summary>
