@@ -8,7 +8,7 @@
         Title="AudioRecorder" Height="110" Width="662">
     <DockPanel LastChildFill="True">
         <StatusBar DockPanel.Dock="Bottom">
-            <TextBlock Text="{Binding StatusText}" ToolTip="{Binding StatusText}" x:Name="StatusTextBlock"/>
+            <TextBox Text="{Binding StatusText}" ToolTip="{Binding StatusText}" x:Name="StatusTextBlock" IsReadOnly="True" Background="#FFF1EDED" BorderBrush="{x:Null}" />
         </StatusBar>
         
         <StackPanel Orientation="Horizontal">

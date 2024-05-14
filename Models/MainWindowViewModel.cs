@@ -13,7 +13,6 @@ namespace AudioRecorder.Models;
 /// </summary>
 public class MainWindowViewModel : INotifyPropertyChanged
 {
-    
     private string? _statusText;
     /// <summary>
     /// Текст статуса работы приложения

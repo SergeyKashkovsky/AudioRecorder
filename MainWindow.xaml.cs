@@ -23,7 +23,6 @@ namespace AudioRecorder
     {
         private string? _fileName;
         private WaveIn? _waveIn;
-        private int _samples;
         private StreamWriter? _streamWriter;
         private readonly MainWindowViewModel _viewModel;
 
@@ -62,7 +61,6 @@ namespace AudioRecorder
                 _waveIn.DataAvailable += WaveInDataAvailable!;
                 //Прикрепляем обработчик завершения записи
                 _waveIn.RecordingStopped += WaveInRecordingStopped!;
-                _samples = 0;
                 _streamWriter = new StreamWriter(_fileName);
                 _waveIn.StartRecording();
 
@@ -87,14 +85,17 @@ namespace AudioRecorder
             StartButton.IsEnabled = true;
             _viewModel.StatusText = String.Format("Запись в файл: {0} остановлена. Ожидание запуска", _fileName);
         }
-
+        /// <summary>
+        /// Обработка события поступления данных от микрофона
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void WaveInDataAvailable(object sender, WaveInEventArgs e)
         {
             try
             {
                 for (int i = 0; i < e.BytesRecorded; i += 2)
                 {
-                    _samples++;
                     var sample = (short)((e.Buffer[i + 1] << 8) | e.Buffer[i + 0]);
                     _viewModel.SignalLevel = sample;
                     _streamWriter!.WriteLineAsync(sample.ToString()).GetAwaiter().GetResult();
@@ -107,7 +108,11 @@ namespace AudioRecorder
                 StartButton.IsEnabled = true;
             }
         }
-
+        /// <summary>
+        /// Обработка события остановки слушателя событий микрофона
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void WaveInRecordingStopped(object sender, EventArgs e)
         {
             _waveIn?.Dispose();
