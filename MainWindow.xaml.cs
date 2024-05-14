@@ -22,7 +22,7 @@ namespace AudioRecorder
     {
         private string _fileName;
         private WaveIn _waveIn;
-        private int samples;
+        private int _samples;
         private StreamWriter _streamWriter;
 
         public MainWindow()
@@ -59,7 +59,7 @@ namespace AudioRecorder
                 _waveIn.DataAvailable += WaveInDataAvailable!;
                 //Прикрепляем обработчик завершения записи
                 _waveIn.RecordingStopped += WaveInRecordingStopped!;
-                samples = 0;
+                _samples = 0;
                 _streamWriter = new StreamWriter(_fileName);
                 _waveIn.StartRecording();
 
@@ -92,7 +92,7 @@ namespace AudioRecorder
             
             for (int i = 0; i < e.BytesRecorded; i += 2) //loop for bytes
             {
-                samples++;
+                _samples++;
                 short sample = (short)((e.Buffer[i + 1] << 8) |
                                 e.Buffer[i + 0]);
                 var level = sample + 32768;
