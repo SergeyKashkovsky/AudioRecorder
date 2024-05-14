@@ -1,4 +1,6 @@
-﻿using AudioRecorder.Models;
+﻿using AudioRecorder.Interfaces;
+using AudioRecorder.Models;
+using AudioRecorder.Services;
 using NAudio.Wave;
 using System.IO;
 using System.Reflection;
@@ -12,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using static System.Net.WebRequestMethods;
 using static System.Windows.Forms.DataFormats;
 
 namespace AudioRecorder
@@ -21,9 +24,9 @@ namespace AudioRecorder
     /// </summary>
     public partial class MainWindow : Window
     {
-        private string? _fileName;
-        private WaveIn? _waveIn;
-        private StreamWriter? _streamWriter;
+        private string? _fileName; //TODO: перенести в модель представления
+        private WaveIn? _waveIn; // TODO: перенести в AudioService
+        private StreamWriter? _streamWriter; // TODO: перенести в AudioService
         private readonly MainWindowViewModel _viewModel;
 
         public MainWindow()
@@ -116,6 +119,60 @@ namespace AudioRecorder
             _streamWriter?.Dispose();
             _waveIn = null;
 
+        }
+
+        /// <summary>
+        /// Обработчик события нажатия кнопки открытия файла
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OpenFileButtonClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var dialogService = new DefaultDialogService();
+                if (!dialogService.OpenFileDialog()) return;
+                if (!dialogService.FilePath.EndsWith(".wav"))
+                {
+                    _fileName = string.Empty;
+                    _viewModel.IsFileOpened = false;
+                    _viewModel.StatusText = "Я пока умею только .wav, простите.";
+                    return;
+                }
+                _fileName = dialogService.FilePath;
+                var parameters = AudioService.GetWaveFormatString(_fileName);
+                _viewModel.StatusText = String.Format("Выбран файл {0}, параметры: {1}", _fileName, parameters);
+                _viewModel.IsFileOpened = true;
+            }
+            catch (Exception ex)
+            {
+                _viewModel.StatusText = String.Format("Ошибка при попытке открытия файла: {0}", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Обработка нажатия кнопки "Записать"
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void RecordFileButtonClick(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(_fileName)) 
+            {
+                _viewModel.StatusText = "Файл не выбран, как у вас получилось нажать эту кнопку?";
+                return;
+            }
+            _viewModel.StatusText = String.Format("Начата обработка файла {0}", _fileName);
+            try
+            {
+                var files = AudioService.ProcessWavFile(_fileName, needForRightChannelCheckBox.IsChecked == true);
+                _viewModel.StatusText = String.Format("Закончена обработка файла {0}. Результат: {1}", _fileName, String.Join(", ", files));
+            }
+            catch(Exception ex)
+            {
+                _viewModel.StatusText = String.Format("Ошибка при обработке файла {0}: {1}", _fileName, ex.Message);
+            }
+            
         }
     }
 }
