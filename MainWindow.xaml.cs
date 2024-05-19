@@ -29,8 +29,10 @@ namespace AudioRecorder
         private string? _fileName; //TODO: перенести в модель представления
         private WaveIn? _waveIn; // TODO: перенести в AudioService
         private StreamWriter? _streamWriter; // TODO: перенести в AudioService
-        //private FileStream? _pcmWriter;
         private readonly MainWindowViewModel _viewModel;
+        private WaveFileWriter _writer;
+        private int cnt = 0;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -60,11 +62,12 @@ namespace AudioRecorder
                 var waveFormat = new WaveFormat(16000, 16, 1);
                 _waveIn = new WaveIn
                 {
-                    BufferMilliseconds = 50,
+                    BufferMilliseconds = 100,
                     DeviceNumber = 0,
-                    WaveFormat = waveFormat
+                    WaveFormat = waveFormat,
                 };
 
+                _writer = new WaveFileWriter(_fileName.Replace(".txt", ".wav"), waveFormat);
                 //Дефолтное устройство для записи (если оно имеется)
                 //встроенный микрофон ноутбука имеет номер 0
                 _waveIn.DeviceNumber = 0;
@@ -75,6 +78,7 @@ namespace AudioRecorder
                 _streamWriter = new StreamWriter(_fileName);
                 //_pcmWriter = new FileStream(_fileName.Replace(".txt", ".pcm"), FileMode.OpenOrCreate);
                 _waveIn.StartRecording();
+                cnt = 0;
 
                 
             }catch (Exception ex)
@@ -111,7 +115,9 @@ namespace AudioRecorder
                     _viewModel.SignalLevel = sample;
                     _streamWriter!.WriteLineAsync(sample.ToString()).GetAwaiter().GetResult();
                 }
-                //_pcmWriter!.Write(e.Buffer, 0, e.BytesRecorded);
+                _writer!.WriteAsync(e.Buffer, 0, e.BytesRecorded);
+                /*cnt++;
+                _viewModel.StatusText = cnt.ToString();*/
             }
             catch(Exception ex)
             {
@@ -127,8 +133,8 @@ namespace AudioRecorder
         /// <param name="e"></param>
         private void WaveInRecordingStopped(object sender, EventArgs e)
         {
-            //_pcmWriter!.Close();
-            //_pcmWriter.Dispose();
+            _writer!.Close();
+            _writer.Dispose();
             _waveIn?.Dispose();
             _streamWriter?.Dispose();
             _waveIn = null;
