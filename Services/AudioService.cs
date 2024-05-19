@@ -21,7 +21,7 @@ public class AudioService
     /// <param name="filePath">Путь к файлу</param>
     /// <param name="needToWriteRightChannel">Нужно ли отдельно писать правый канал. Если не установлено, будет писать только левый, если тип записи стерео.</param>
     /// <returns>Коллекцию путей созданных файлов</returns>
-    public static IEnumerable<string> ProcessWavFile(string filePath, bool needToWriteRightChannel)
+    public static IEnumerable<string> ProcessWavFile(string filePath, bool needToWriteRightChannel, string outputFile)
     {
         //TODO: Вынести из метода функционал преобразования потока wav в поток уровней (сэмплов) так, чтобы не при переборе в цикле писать в файл, а после получения потока
         using var reader = new WaveFileReader(filePath);
@@ -29,9 +29,8 @@ public class AudioService
         if (hdrInfo.Channels > 2)
             throw new NotImplementedException("Пока не могу обрабатывать более двух каналов");
 
-        var info = new FileInfo(Assembly.GetExecutingAssembly().Location);
-
-        var now = DateTime.Now.ToString("yyyyMMddHHmmss");
+        var info = new FileInfo(outputFile);
+        var now = info.Name.Replace(".txt", "");
 
         var _leftFileName = String.Format(@"{0}\{1}{2}.txt", info.Directory, now, hdrInfo.Channels > 1 && needToWriteRightChannel ? "-left" : string.Empty);
         var _rightFileName = hdrInfo.Channels > 1 && needToWriteRightChannel ? String.Format(@"{0}\{1}-right.txt", info.Directory, now) : string.Empty;

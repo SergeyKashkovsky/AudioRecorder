@@ -43,9 +43,14 @@ namespace AudioRecorder
         /// <param name="e"></param>
         private void StartButtonClick(object sender, RoutedEventArgs e)
         {
-            var info = new FileInfo(Assembly.GetExecutingAssembly().Location);
-
-            _fileName = String.Format(@"{0}\{1}.txt", info.Directory, DateTime.Now.ToString("yyyyMMddHHmmss"));
+            
+            var dialogService = new DefaultDialogService();
+            _fileName = dialogService.SaveFileDialog();
+            if (string.IsNullOrEmpty(_fileName))
+            {
+                _viewModel.StatusText = "Не выбран файл, куда писать";
+                return;
+            }
             _viewModel.IsRecording = true;
             _viewModel.StatusText = String.Format("Начата запись в файл: {0}", _fileName);
             try
@@ -157,6 +162,8 @@ namespace AudioRecorder
         /// <param name="e"></param>
         private void RecordFileButtonClick(object sender, RoutedEventArgs e)
         {
+            var dialogService = new DefaultDialogService();
+            var fileName = dialogService.SaveFileDialog();
             if (string.IsNullOrEmpty(_fileName)) 
             {
                 _viewModel.StatusText = "Файл не выбран, как у вас получилось нажать эту кнопку?";
@@ -165,7 +172,7 @@ namespace AudioRecorder
             _viewModel.StatusText = String.Format("Начата обработка файла {0}", _fileName);
             try
             {
-                var files = AudioService.ProcessWavFile(_fileName, needForRightChannelCheckBox.IsChecked == true);
+                var files = AudioService.ProcessWavFile(_fileName, needForRightChannelCheckBox.IsChecked == true, fileName);
                 _viewModel.StatusText = String.Format("Закончена обработка файла {0}. Результат: {1}", _fileName, String.Join(", ", files));
             }
             catch(Exception ex)

@@ -18,4 +18,9 @@ public interface IDialogService
     /// Вызов окна открытия файла
     /// </summary>
     bool OpenFileDialog();
+    /// <summary>
+    /// Вызов окна сохранения файла
+    /// </summary>
+    /// <returns></returns>
+    string SaveFileDialog();
 }
