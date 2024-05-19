@@ -3,7 +3,9 @@ using AudioRecorder.Models;
 using AudioRecorder.Services;
 using NAudio.Wave;
 using System.IO;
+using System.IO.Pipes;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -27,8 +29,8 @@ namespace AudioRecorder
         private string? _fileName; //TODO: перенести в модель представления
         private WaveIn? _waveIn; // TODO: перенести в AudioService
         private StreamWriter? _streamWriter; // TODO: перенести в AudioService
+        //private FileStream? _pcmWriter;
         private readonly MainWindowViewModel _viewModel;
-
         public MainWindow()
         {
             InitializeComponent();
@@ -55,12 +57,14 @@ namespace AudioRecorder
             _viewModel.StatusText = String.Format("Начата запись в файл: {0}", _fileName);
             try
             {
+                var waveFormat = new WaveFormat(16000, 16, 1);
                 _waveIn = new WaveIn
                 {
                     BufferMilliseconds = 50,
                     DeviceNumber = 0,
-                    WaveFormat = new WaveFormat(16000, 16, 1)
+                    WaveFormat = waveFormat
                 };
+
                 //Дефолтное устройство для записи (если оно имеется)
                 //встроенный микрофон ноутбука имеет номер 0
                 _waveIn.DeviceNumber = 0;
@@ -69,6 +73,7 @@ namespace AudioRecorder
                 //Прикрепляем обработчик завершения записи
                 _waveIn.RecordingStopped += WaveInRecordingStopped!;
                 _streamWriter = new StreamWriter(_fileName);
+                //_pcmWriter = new FileStream(_fileName.Replace(".txt", ".pcm"), FileMode.OpenOrCreate);
                 _waveIn.StartRecording();
 
                 
@@ -106,7 +111,9 @@ namespace AudioRecorder
                     _viewModel.SignalLevel = sample;
                     _streamWriter!.WriteLineAsync(sample.ToString()).GetAwaiter().GetResult();
                 }
-            }catch(Exception ex)
+                //_pcmWriter!.Write(e.Buffer, 0, e.BytesRecorded);
+            }
+            catch(Exception ex)
             {
                 _viewModel.IsRecording = false;
                 _viewModel.StatusText = String.Format("Ошибка {0}, останавливаю запись в файл {1}", ex.Message, _fileName);
@@ -120,6 +127,8 @@ namespace AudioRecorder
         /// <param name="e"></param>
         private void WaveInRecordingStopped(object sender, EventArgs e)
         {
+            //_pcmWriter!.Close();
+            //_pcmWriter.Dispose();
             _waveIn?.Dispose();
             _streamWriter?.Dispose();
             _waveIn = null;
