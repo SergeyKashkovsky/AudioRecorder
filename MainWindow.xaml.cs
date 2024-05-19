@@ -133,20 +133,17 @@ namespace AudioRecorder
         /// <param name="e"></param>
         private void OpenFileButtonClick(object sender, RoutedEventArgs e)
         {
+            needForRightChannelCheckBox.IsEnabled = false;
             try
             {
                 var dialogService = new DefaultDialogService();
                 if (!dialogService.OpenFileDialog()) return;
-                if (!dialogService.FilePath.EndsWith(".wav"))
-                {
-                    _fileName = string.Empty;
-                    _viewModel.IsFileOpened = false;
-                    _viewModel.StatusText = "Я пока умею только .wav, простите.";
-                    return;
-                }
+                
+                using var stream = new MediaFoundationReader(dialogService.FilePath);
+                var ft = stream.WaveFormat.ToString();
+                if (stream.WaveFormat.Channels > 1) needForRightChannelCheckBox.IsEnabled = true;
                 _fileName = dialogService.FilePath;
-                var parameters = AudioService.GetWaveFormatString(_fileName);
-                _viewModel.StatusText = String.Format("Выбран файл {0}, параметры: {1}", _fileName, parameters);
+                _viewModel.StatusText = String.Format("Выбран файл {0}, параметры: {1}", _fileName, ft);
                 _viewModel.IsFileOpened = true;
             }
             catch (Exception ex)
@@ -172,7 +169,7 @@ namespace AudioRecorder
             _viewModel.StatusText = String.Format("Начата обработка файла {0}", _fileName);
             try
             {
-                var files = AudioService.ProcessWavFile(_fileName, needForRightChannelCheckBox.IsChecked == true, fileName);
+                var files = AudioService.ProcessFile(_fileName, needForRightChannelCheckBox.IsChecked == true, fileName);
                 _viewModel.StatusText = String.Format("Закончена обработка файла {0}. Результат: {1}", _fileName, String.Join(", ", files));
             }
             catch(Exception ex)
