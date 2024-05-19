@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using AudioRecorder.Interfaces;
+using AudioRecorder.Services;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+using System.Security.Cryptography;
+using System.Windows;
 
 namespace AudioRecorder.Models;
 
@@ -13,6 +12,9 @@ namespace AudioRecorder.Models;
 /// </summary>
 public class MainWindowViewModel : INotifyPropertyChanged
 {
+    private const string _firstTabDefaultStatus = "Ожидание запуска. Частота дискретизации: 16кГц, 16 бит, моно";
+    private const string _secondTabDefaultStatus = "Откройте файл в формате wav или mp3";
+    private readonly IDialogService _dialogService = new DefaultDialogService();
     private string? _statusText;
     /// <summary>
     /// Текст статуса работы приложения
@@ -24,6 +26,45 @@ public class MainWindowViewModel : INotifyPropertyChanged
             _statusText = value;
             OnPropertyChanged("StatusText");
         } 
+    }
+
+    
+    private int _tabSelectedIndex = 0;
+    /// <summary>
+    /// Индекс открытой табы
+    /// </summary>
+    public int TabSelectedIndex
+    {
+        get => _tabSelectedIndex;
+        set
+        {
+            _tabSelectedIndex = value;
+            StatusText = _tabSelectedIndex <=0 ? _firstTabDefaultStatus : _secondTabDefaultStatus;
+            IsFileOpened = false;
+            OnPropertyChanged("TabSelectedIndex");
+            OnPropertyChanged("MicrophoneUICollapsed");
+            OnPropertyChanged("FileUICollapsed");
+        }
+    }
+
+    /// <summary>
+    /// Отображаем или скрываем запись потока с микрофона
+    /// </summary>
+    public Visibility MicrophoneUICollapsed => TabSelectedIndex > 0 ? Visibility.Collapsed : Visibility.Visible;
+    /// <summary>
+    /// Отображаем или скрываем запись потока из файла
+    /// </summary>
+    public Visibility FileUICollapsed => TabSelectedIndex != 1 ? Visibility.Collapsed : Visibility.Visible;
+
+    private bool _isFileOpened;
+    public bool IsFileOpened
+    {
+        get => _isFileOpened;
+        set
+        {
+            _isFileOpened = value;
+            OnPropertyChanged("IsFileOpened");
+        }
     }
 
     private bool _isRecording = false;
@@ -78,5 +119,4 @@ public class MainWindowViewModel : INotifyPropertyChanged
     /// <param name="prop"></param>
     public void OnPropertyChanged([CallerMemberName] string prop = "")
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
-
 }

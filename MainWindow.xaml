@@ -5,16 +5,28 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AudioRecorder" xmlns:models="clr-namespace:AudioRecorder.Models" d:DataContext="{d:DesignInstance Type=models:MainWindowViewModel}"
         mc:Ignorable="d"
-        Title="AudioRecorder" Height="110" Width="662">
+        Title="AudioRecorder" Height="155" Width="662">
     <DockPanel LastChildFill="True">
         <StatusBar DockPanel.Dock="Bottom">
             <TextBox Text="{Binding StatusText}" ToolTip="{Binding StatusText}" x:Name="StatusTextBlock" IsReadOnly="True" Background="#FFF1EDED" BorderBrush="{x:Null}" />
         </StatusBar>
-        
-        <StackPanel Orientation="Horizontal">
+
+        <StackPanel DockPanel.Dock="Top">
+            <TabControl SelectedIndex="{Binding TabSelectedIndex}">
+                <TabItem Header="Запись с микрофона"/>
+                <TabItem Header="Запись из файла"/>
+            </TabControl>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Visibility="{Binding MicrophoneUICollapsed}">
             <Button Content="Начать запись" Width="120" Margin="20,10,0,10" Click="StartButtonClick" x:Name="StartButton" Height="21" IsEnabled="{Binding IsNotRecording}"/>
             <Button Content="Остановить запись" Width="120" Margin="10,10,20,10" IsEnabled="{Binding IsRecording}" Click="StopButtonClick" x:Name="StopButton" Height="21"/>
             <ProgressBar Orientation="Horizontal" Minimum="0" Maximum="32768" x:Name="LevelProgressBar" Margin="10,0,0,0" Width="360" Value="{Binding Amplitude, Mode=OneWay}"/>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Visibility="{Binding FileUICollapsed}">
+            <Button Content="Открыть" Margin="20,10,0,10" Height="21" Click="OpenFileButtonClick"></Button>
+            <Button Content="Записать" Margin="10,10,0,10" IsEnabled="{Binding IsFileOpened}" Height="21" Click="RecordFileButtonClick"></Button>
+            <CheckBox x:Name="needForRightChannelCheckBox" IsThreeState="True" IsChecked="False" Height="20" Content="Раздельно записать каналы стерео файла" Margin="20,0,0,-4" ToolTip="Если файл содержит два канала, будет создано два файла: один под левый канал, другой под правый"/>
         </StackPanel>
 
     </DockPanel>
