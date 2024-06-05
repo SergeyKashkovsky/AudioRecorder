@@ -76,7 +76,6 @@ namespace AudioRecorder
                 //Прикрепляем обработчик завершения записи
                 _waveIn.RecordingStopped += WaveInRecordingStopped!;
                 _streamWriter = new StreamWriter(_fileName);
-                //_pcmWriter = new FileStream(_fileName.Replace(".txt", ".pcm"), FileMode.OpenOrCreate);
                 _waveIn.StartRecording();
                 cnt = 0;
 
@@ -116,8 +115,6 @@ namespace AudioRecorder
                     _streamWriter!.WriteLineAsync(sample.ToString()).GetAwaiter().GetResult();
                 }
                 _writer!.WriteAsync(e.Buffer, 0, e.BytesRecorded);
-                /*cnt++;
-                _viewModel.StatusText = cnt.ToString();*/
             }
             catch(Exception ex)
             {
