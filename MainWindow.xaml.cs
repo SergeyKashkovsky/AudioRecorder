@@ -3,7 +3,9 @@ using AudioRecorder.Models;
 using AudioRecorder.Services;
 using NAudio.Wave;
 using System.IO;
+using System.IO.Pipes;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -28,6 +30,8 @@ namespace AudioRecorder
         private WaveIn? _waveIn; // TODO: перенести в AudioService
         private StreamWriter? _streamWriter; // TODO: перенести в AudioService
         private readonly MainWindowViewModel _viewModel;
+        private WaveFileWriter _writer;
+        private int cnt = 0;
 
         public MainWindow()
         {
@@ -55,12 +59,15 @@ namespace AudioRecorder
             _viewModel.StatusText = String.Format("Начата запись в файл: {0}", _fileName);
             try
             {
+                var waveFormat = new WaveFormat(16000, 16, 1);
                 _waveIn = new WaveIn
                 {
-                    BufferMilliseconds = 50,
+                    BufferMilliseconds = 100,
                     DeviceNumber = 0,
-                    WaveFormat = new WaveFormat(16000, 16, 1)
+                    WaveFormat = waveFormat,
                 };
+
+                _writer = new WaveFileWriter(_fileName.Replace(".txt", ".wav"), waveFormat);
                 //Дефолтное устройство для записи (если оно имеется)
                 //встроенный микрофон ноутбука имеет номер 0
                 _waveIn.DeviceNumber = 0;
@@ -70,6 +77,7 @@ namespace AudioRecorder
                 _waveIn.RecordingStopped += WaveInRecordingStopped!;
                 _streamWriter = new StreamWriter(_fileName);
                 _waveIn.StartRecording();
+                cnt = 0;
 
                 
             }catch (Exception ex)
@@ -106,7 +114,9 @@ namespace AudioRecorder
                     _viewModel.SignalLevel = sample;
                     _streamWriter!.WriteLineAsync(sample.ToString()).GetAwaiter().GetResult();
                 }
-            }catch(Exception ex)
+                _writer!.WriteAsync(e.Buffer, 0, e.BytesRecorded);
+            }
+            catch(Exception ex)
             {
                 _viewModel.IsRecording = false;
                 _viewModel.StatusText = String.Format("Ошибка {0}, останавливаю запись в файл {1}", ex.Message, _fileName);
@@ -120,6 +130,8 @@ namespace AudioRecorder
         /// <param name="e"></param>
         private void WaveInRecordingStopped(object sender, EventArgs e)
         {
+            _writer!.Close();
+            _writer.Dispose();
             _waveIn?.Dispose();
             _streamWriter?.Dispose();
             _waveIn = null;
@@ -133,20 +145,17 @@ namespace AudioRecorder
         /// <param name="e"></param>
         private void OpenFileButtonClick(object sender, RoutedEventArgs e)
         {
+            needForRightChannelCheckBox.IsEnabled = false;
             try
             {
                 var dialogService = new DefaultDialogService();
                 if (!dialogService.OpenFileDialog()) return;
-                if (!dialogService.FilePath.EndsWith(".wav"))
-                {
-                    _fileName = string.Empty;
-                    _viewModel.IsFileOpened = false;
-                    _viewModel.StatusText = "Я пока умею только .wav, простите.";
-                    return;
-                }
+                
+                using var stream = new MediaFoundationReader(dialogService.FilePath);
+                var ft = stream.WaveFormat.ToString();
+                if (stream.WaveFormat.Channels > 1) needForRightChannelCheckBox.IsEnabled = true;
                 _fileName = dialogService.FilePath;
-                var parameters = AudioService.GetWaveFormatString(_fileName);
-                _viewModel.StatusText = String.Format("Выбран файл {0}, параметры: {1}", _fileName, parameters);
+                _viewModel.StatusText = String.Format("Выбран файл {0}, параметры: {1}", _fileName, ft);
                 _viewModel.IsFileOpened = true;
             }
             catch (Exception ex)
@@ -172,7 +181,7 @@ namespace AudioRecorder
             _viewModel.StatusText = String.Format("Начата обработка файла {0}", _fileName);
             try
             {
-                var files = AudioService.ProcessWavFile(_fileName, needForRightChannelCheckBox.IsChecked == true, fileName);
+                var files = AudioService.ProcessFile(_fileName, needForRightChannelCheckBox.IsChecked == true, fileName);
                 _viewModel.StatusText = String.Format("Закончена обработка файла {0}. Результат: {1}", _fileName, String.Join(", ", files));
             }
             catch(Exception ex)

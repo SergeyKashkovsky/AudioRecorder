@@ -20,13 +20,13 @@ public class DefaultDialogService: IDialogService
     {
         var openFileDialog = new OpenFileDialog
         {
-            Filter = "Аудио Файлы (.wav;.mp3)|*.wav;*.mp3"
+            Filter = "Аудио Файлы (.wav;.aac;.mp3)|*.wav;*.aac;*.mp3"
         };
         if (openFileDialog.ShowDialog() != DialogResult.OK) return false;
         FilePath = openFileDialog.FileName;
         return true;
     }
-
+    /// <inheritdoc/>
     public string SaveFileDialog()
     {
         var info = new FileInfo(Assembly.GetExecutingAssembly().Location);
