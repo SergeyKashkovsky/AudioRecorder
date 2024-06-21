@@ -171,14 +171,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
                 var x = watch.Elapsed;
 
-                List<TimeSpanDataPoint> xx = new List<TimeSpanDataPoint>()
-                    {
-                        x,
-                        x,
-                        x,
-                        x,
-                        x
-                    };
                 Controller.Range.MaximumX = x;
                 Controller.PushData(x, y);
                 Thread.Sleep(30);

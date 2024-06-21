@@ -36,32 +36,24 @@
 
         <StackPanel DockPanel.Dock="Top">
             <TabControl SelectedIndex="{Binding TabSelectedIndex}">
-                <TabItem Header="Запись с микрофона"/>
-                <TabItem Header="Запись из файла"/>
+                <TabItem Header="Запись с микрофона">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                        <Button Content="Начать запись" Width="120" Margin="20,10,0,10" Click="StartButtonClick" x:Name="StartButton" Height="21" IsEnabled="{Binding IsNotRecording}"/>
+                        <Button Content="Остановить запись" Width="120" Margin="10,10,20,10" IsEnabled="{Binding IsRecording}" Click="StopButtonClick" x:Name="StopButton" Height="21"/>
+                        <ProgressBar Orientation="Horizontal" Minimum="0" Maximum="32768" x:Name="LevelProgressBar" Margin="10,0,0,0" Width="360" Value="{Binding Amplitude, Mode=OneWay}"/>
+                    </StackPanel>
+                </TabItem>
+                <TabItem Header="Запись из файла">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                        <Button Content="Открыть" Margin="20,10,0,10" Height="21" Click="OpenFileButtonClick"></Button>
+                        <Button Content="Записать" Margin="10,10,0,10" IsEnabled="{Binding IsFileOpened}" Height="21" Click="RecordFileButtonClick"></Button>
+                        <CheckBox IsEnabled="False" IsThreeState="False" x:Name="needForRightChannelCheckBox" IsChecked="False" Height="20" Content="Раздельно записать каналы стерео файла" Margin="20,0,0,-4" ToolTip="Если файл содержит два канала, будет создано два файла: один под левый канал, другой под правый"/>
+                    </StackPanel>
+                </TabItem>
             </TabControl>
         </StackPanel>
         <DockPanel>
-            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Visibility="{Binding MicrophoneUICollapsed}">
-                <Button Content="Начать запись" Width="120" Margin="20,10,0,10" Click="StartButtonClick" x:Name="StartButton" Height="21" IsEnabled="{Binding IsNotRecording}"/>
-                <Button Content="Остановить запись" Width="120" Margin="10,10,20,10" IsEnabled="{Binding IsRecording}" Click="StopButtonClick" x:Name="StopButton" Height="21"/>
-                <ProgressBar Orientation="Horizontal" Minimum="0" Maximum="32768" x:Name="LevelProgressBar" Margin="10,0,0,0" Width="360" Value="{Binding Amplitude, Mode=OneWay}"/>
-            </StackPanel>
-
-            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Visibility="{Binding FileUICollapsed}">
-                <Button Content="Открыть" Margin="20,10,0,10" Height="21" Click="OpenFileButtonClick"></Button>
-                <Button Content="Записать" Margin="10,10,0,10" IsEnabled="{Binding IsFileOpened}" Height="21" Click="RecordFileButtonClick"></Button>
-                <CheckBox IsEnabled="False" IsThreeState="False" x:Name="needForRightChannelCheckBox" IsChecked="False" Height="20" Content="Раздельно записать каналы стерео файла" Margin="20,0,0,-4" ToolTip="Если файл содержит два канала, будет создано два файла: один под левый канал, другой под правый"/>
-            </StackPanel>
-            <Grid DockPanel.Dock="Bottom">
-                <!--https://github.com/royben/RealTimeGraphX/blob/master/RealTimeGraphX.WPF.Demo/MainWindow.xaml-->
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="1*"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1*"/>
-                </Grid.ColumnDefinitions>
                 <local:WpfGraphControl Margin="10" Controller="{Binding Controller}"/>
-            </Grid>
         </DockPanel>
 
 
