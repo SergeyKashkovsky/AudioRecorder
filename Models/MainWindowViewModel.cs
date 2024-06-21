@@ -6,6 +6,7 @@ using RealTimeGraphX.Renderers;
 using RealTimeGraphX.WPF;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Windows;
@@ -120,20 +121,23 @@ public class MainWindowViewModel : INotifyPropertyChanged
         StatusText = "Ожидание запуска. Частота дискретизации: 16кГц, 16 бит, моно";
 
         Controller = new WpfGraphController<TimeSpanDataPoint, DoubleDataPoint>();
-        Controller.Range.MinimumY = 0;
-        Controller.Range.MaximumY = 1080;
+        
+    }
+    /// <summary>
+    /// Инициализация контроллера для записи микрофона
+    /// </summary>
+    public void InitControllerForMic()
+    {
+        Controller.Clear();
+        Controller.Range.MinimumY = -33000;
+        Controller.Range.MaximumY = 33000;
         Controller.Range.MaximumX = TimeSpan.FromSeconds(10);
-        Controller.Range.AutoY = true;
-        Controller.Range.AutoYFallbackMode = GraphRangeAutoYFallBackMode.MinMax;
-
 
         Controller.DataSeriesCollection.Add(new WpfGraphDataSeries()
         {
             Name = "Series",
             Stroke = Colors.DodgerBlue,
         });
-
-        Application.Current.MainWindow.ContentRendered += (_, __) => Start();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -149,32 +153,36 @@ public class MainWindowViewModel : INotifyPropertyChanged
     //Graph controller with timespan as X axis and double as Y.
     public WpfGraphController<TimeSpanDataPoint, DoubleDataPoint> Controller { get; set; }
 
-    private void Start()
+    /// <summary>
+    /// Вставляем точку
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    public void PushGraphData(TimeSpan x, double y)
     {
-        Task.Factory.StartNew(() =>
+        Controller.PushData(x, y);
+    }
+
+    /// <summary>
+    /// Рисуем график из файла
+    /// </summary>
+    /// <param name="filename"></param>
+    public void DrawFileGraph(string filename)
+    {
+        var strArray = File.ReadAllLines(filename);
+        var yArray = strArray.Select(x => new DoubleDataPoint(short.Parse(x))).ToArray();
+        var period = new TimeSpan(62500);
+        var xArray = new List<TimeSpanDataPoint>();
+        for(var i = 0; i < yArray.Length; i++)
         {
-            Stopwatch watch = new Stopwatch();
-            watch.Start();
-
-            while (true)
-            {
-                var y = System.Windows.Forms.Cursor.Position.Y;
-
-                List<DoubleDataPoint> yy = new List<DoubleDataPoint>()
-                    {
-                        y,
-                        y + 20,
-                        y + 40,
-                        y + 60,
-                        y + 80,
-                    };
-
-                var x = watch.Elapsed;
-
-                Controller.Range.MaximumX = x;
-                Controller.PushData(x, y);
-                Thread.Sleep(30);
-            }
-        }, TaskCreationOptions.LongRunning);
+            var ts = new TimeSpan(period.Ticks*i);
+            var res = new TimeSpanDataPoint(ts);
+            xArray.Add(res);
+        };
+        Controller.Clear();
+        Controller.Range.MaximumX = new TimeSpan(period.Ticks * yArray.Length);
+        Controller.Range.MinimumY = -33000;
+        Controller.Range.MaximumY = 33000;
+        Controller.PushData(xArray, yArray);
     }
 }

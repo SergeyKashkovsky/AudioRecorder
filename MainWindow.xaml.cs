@@ -4,6 +4,7 @@ using AudioRecorder.Services;
 using NAudio.Wave;
 using RealTimeGraphX.DataPoints;
 using RealTimeGraphX.WPF;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Reflection;
@@ -34,6 +35,8 @@ namespace AudioRecorder
         private readonly MainWindowViewModel _viewModel;
         private WaveFileWriter _writer;
         private int cnt = 0;
+        private TimeSpan _graphX;
+        private readonly TimeSpan _period = new TimeSpan(62500);
 
         public MainWindow()
         {
@@ -81,9 +84,10 @@ namespace AudioRecorder
                 _streamWriter = new StreamWriter(_fileName);
                 _waveIn.StartRecording();
                 cnt = 0;
-
-                
-            }catch (Exception ex)
+                _graphX = new TimeSpan();
+                _viewModel.InitControllerForMic();
+            }
+            catch (Exception ex)
             {
                 StopButton.IsEnabled = false;
                 _viewModel.StatusText = String.Format("Ошибка: {0}, выполнение программы не возможно.", ex.Message);
@@ -114,8 +118,10 @@ namespace AudioRecorder
                 for (int i = 0; i < e.BytesRecorded; i += 2)
                 {
                     var sample = (short)((e.Buffer[i + 1] << 8) | e.Buffer[i + 0]);
-                    _viewModel.SignalLevel = sample;
+                    _graphX = _graphX.Add(_period);
+                    _viewModel.PushGraphData(_graphX, sample);
                     _streamWriter!.WriteLineAsync(sample.ToString()).GetAwaiter().GetResult();
+                    
                 }
                 _writer!.WriteAsync(e.Buffer, 0, e.BytesRecorded);
             }
@@ -138,7 +144,7 @@ namespace AudioRecorder
             _waveIn?.Dispose();
             _streamWriter?.Dispose();
             _waveIn = null;
-
+            _viewModel.DrawFileGraph(_fileName!);
         }
 
         /// <summary>
@@ -186,6 +192,7 @@ namespace AudioRecorder
             {
                 var files = AudioService.ProcessFile(_fileName, needForRightChannelCheckBox.IsChecked == true, fileName);
                 _viewModel.StatusText = String.Format("Закончена обработка файла {0}. Результат: {1}", _fileName, String.Join(", ", files));
+                _viewModel.DrawFileGraph(fileName);
             }
             catch(Exception ex)
             {
