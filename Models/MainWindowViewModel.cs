@@ -1,9 +1,15 @@
 ﻿using AudioRecorder.Interfaces;
 using AudioRecorder.Services;
+using RealTimeGraphX;
+using RealTimeGraphX.DataPoints;
+using RealTimeGraphX.Renderers;
+using RealTimeGraphX.WPF;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Windows;
+using System.Windows.Media;
 
 namespace AudioRecorder.Models;
 
@@ -106,9 +112,28 @@ public class MainWindowViewModel : INotifyPropertyChanged
     /// </summary>
     public int Amplitude => Math.Abs(SignalLevel);
 
+    /// <summary>
+    /// Конструктор модели представления
+    /// </summary>
     public MainWindowViewModel()
     {
         StatusText = "Ожидание запуска. Частота дискретизации: 16кГц, 16 бит, моно";
+
+        Controller = new WpfGraphController<TimeSpanDataPoint, DoubleDataPoint>();
+        Controller.Range.MinimumY = 0;
+        Controller.Range.MaximumY = 1080;
+        Controller.Range.MaximumX = TimeSpan.FromSeconds(10);
+        Controller.Range.AutoY = true;
+        Controller.Range.AutoYFallbackMode = GraphRangeAutoYFallBackMode.MinMax;
+
+
+        Controller.DataSeriesCollection.Add(new WpfGraphDataSeries()
+        {
+            Name = "Series",
+            Stroke = Colors.DodgerBlue,
+        });
+
+        Application.Current.MainWindow.ContentRendered += (_, __) => Start();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -119,4 +144,45 @@ public class MainWindowViewModel : INotifyPropertyChanged
     /// <param name="prop"></param>
     public void OnPropertyChanged([CallerMemberName] string prop = "")
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+
+
+    //Graph controller with timespan as X axis and double as Y.
+    public WpfGraphController<TimeSpanDataPoint, DoubleDataPoint> Controller { get; set; }
+
+    private void Start()
+    {
+        Task.Factory.StartNew(() =>
+        {
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+
+            while (true)
+            {
+                var y = System.Windows.Forms.Cursor.Position.Y;
+
+                List<DoubleDataPoint> yy = new List<DoubleDataPoint>()
+                    {
+                        y,
+                        y + 20,
+                        y + 40,
+                        y + 60,
+                        y + 80,
+                    };
+
+                var x = watch.Elapsed;
+
+                List<TimeSpanDataPoint> xx = new List<TimeSpanDataPoint>()
+                    {
+                        x,
+                        x,
+                        x,
+                        x,
+                        x
+                    };
+                Controller.Range.MaximumX = x;
+                Controller.PushData(x, y);
+                Thread.Sleep(30);
+            }
+        }, TaskCreationOptions.LongRunning);
+    }
 }

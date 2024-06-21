@@ -2,6 +2,8 @@
 using AudioRecorder.Models;
 using AudioRecorder.Services;
 using NAudio.Wave;
+using RealTimeGraphX.DataPoints;
+using RealTimeGraphX.WPF;
 using System.IO;
 using System.IO.Pipes;
 using System.Reflection;
@@ -38,6 +40,7 @@ namespace AudioRecorder
             InitializeComponent();
             _viewModel = new MainWindowViewModel();
             DataContext = _viewModel;
+            var Controller = new WpfGraphController<TimeSpanDataPoint, DoubleDataPoint>();
         }
 
         /// <summary>
