@@ -23,6 +23,17 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private const string _firstTabDefaultStatus = "Ожидание запуска. Частота дискретизации: 16кГц, 16 бит, моно";
     private const string _secondTabDefaultStatus = "Откройте файл в формате wav или mp3";
     private readonly IDialogService _dialogService = new DefaultDialogService();
+
+    /// <summary>
+    /// Коллекция аудио-устройств
+    /// </summary>
+    public List<AudioDevice> AudioDevices { get; set; }
+    
+    /// <summary>
+    /// Выбранное аудио-устройство
+    /// </summary>
+    public AudioDevice AudioDevice { get; set; }
+
     private string? _statusText;
     /// <summary>
     /// Текст статуса работы приложения
@@ -109,6 +120,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             OnPropertyChanged("Amplitude");
         } 
     }
+
     /// <summary>
     /// Амплитуда сигнала: модуль уровня
     /// </summary>
@@ -187,15 +199,17 @@ public class MainWindowViewModel : INotifyPropertyChanged
         Controller.PushData(xArray, yArray);
     }
 
-    private List<string> _devices = new List<string>();
-
+    /// <summary>
+    /// Получение списка аудиоустройств
+    /// </summary>
     public void GetAudioDevices()
     {
+        AudioDevices = new List<AudioDevice>();
         for (int n = -1; n < WaveIn.DeviceCount; n++)
         {
             var caps = WaveIn.GetCapabilities(n);
-            //Console.WriteLine($"{n}: {caps.ProductName}");
-            _devices.Add(caps.ProductName);
+            AudioDevices.Add(new AudioDevice(caps, n));
         }
+        AudioDevice = AudioDevices.FirstOrDefault(x => x.Id == 0)!;
     }
 }
