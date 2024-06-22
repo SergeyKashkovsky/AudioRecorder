@@ -121,7 +121,12 @@ public class MainWindowViewModel : INotifyPropertyChanged
         StatusText = "Ожидание запуска. Частота дискретизации: 16кГц, 16 бит, моно";
 
         Controller = new WpfGraphController<TimeSpanDataPoint, DoubleDataPoint>();
-        
+        Controller.DataSeriesCollection.Add(new WpfGraphDataSeries()
+        {
+            Name = "Series",
+            Stroke = Colors.DodgerBlue,
+        });
+
     }
     /// <summary>
     /// Инициализация контроллера для записи микрофона
@@ -132,12 +137,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
         Controller.Range.MinimumY = -33000;
         Controller.Range.MaximumY = 33000;
         Controller.Range.MaximumX = TimeSpan.FromSeconds(10);
-
-        Controller.DataSeriesCollection.Add(new WpfGraphDataSeries()
-        {
-            Name = "Series",
-            Stroke = Colors.DodgerBlue,
-        });
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -167,11 +166,12 @@ public class MainWindowViewModel : INotifyPropertyChanged
     /// Рисуем график из файла
     /// </summary>
     /// <param name="filename"></param>
-    public void DrawFileGraph(string filename)
+    public void DrawFileGraph(string filename, long sampleRate)
     {
+        _statusText = "Строим график";
         var strArray = File.ReadAllLines(filename);
         var yArray = strArray.Select(x => new DoubleDataPoint(short.Parse(x))).ToArray();
-        var period = new TimeSpan(62500);
+        var period = new TimeSpan(sampleRate);
         var xArray = new List<TimeSpanDataPoint>();
         for(var i = 0; i < yArray.Length; i++)
         {
@@ -184,5 +184,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
         Controller.Range.MinimumY = -33000;
         Controller.Range.MaximumY = 33000;
         Controller.PushData(xArray, yArray);
+        _statusText = "Построили график";
     }
 }

@@ -144,7 +144,7 @@ namespace AudioRecorder
             _waveIn?.Dispose();
             _streamWriter?.Dispose();
             _waveIn = null;
-            _viewModel.DrawFileGraph(_fileName!);
+            _viewModel.DrawFileGraph(_fileName!, 62500);
         }
 
         /// <summary>
@@ -192,7 +192,7 @@ namespace AudioRecorder
             {
                 var files = AudioService.ProcessFile(_fileName, needForRightChannelCheckBox.IsChecked == true, fileName);
                 _viewModel.StatusText = String.Format("Закончена обработка файла {0}. Результат: {1}", _fileName, String.Join(", ", files));
-                _viewModel.DrawFileGraph(fileName);
+                _viewModel.DrawFileGraph(fileName, AudioService.GetSamplePeriod(_fileName));
             }
             catch(Exception ex)
             {
