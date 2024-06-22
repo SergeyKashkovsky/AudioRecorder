@@ -1,9 +1,16 @@
 ﻿using AudioRecorder.Interfaces;
 using AudioRecorder.Services;
+using RealTimeGraphX;
+using RealTimeGraphX.DataPoints;
+using RealTimeGraphX.Renderers;
+using RealTimeGraphX.WPF;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Windows;
+using System.Windows.Media;
 
 namespace AudioRecorder.Models;
 
@@ -106,9 +113,30 @@ public class MainWindowViewModel : INotifyPropertyChanged
     /// </summary>
     public int Amplitude => Math.Abs(SignalLevel);
 
+    /// <summary>
+    /// Конструктор модели представления
+    /// </summary>
     public MainWindowViewModel()
     {
         StatusText = "Ожидание запуска. Частота дискретизации: 16кГц, 16 бит, моно";
+
+        Controller = new WpfGraphController<TimeSpanDataPoint, DoubleDataPoint>();
+        Controller.DataSeriesCollection.Add(new WpfGraphDataSeries()
+        {
+            Name = "Series",
+            Stroke = Colors.DodgerBlue,
+        });
+
+    }
+    /// <summary>
+    /// Инициализация контроллера для записи микрофона
+    /// </summary>
+    public void InitControllerForMic()
+    {
+        Controller.Clear();
+        Controller.Range.MinimumY = -33000;
+        Controller.Range.MaximumY = 33000;
+        Controller.Range.MaximumX = TimeSpan.FromSeconds(2);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -119,4 +147,41 @@ public class MainWindowViewModel : INotifyPropertyChanged
     /// <param name="prop"></param>
     public void OnPropertyChanged([CallerMemberName] string prop = "")
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+
+
+    //Graph controller with timespan as X axis and double as Y.
+    public WpfGraphController<TimeSpanDataPoint, DoubleDataPoint> Controller { get; set; }
+
+    /// <summary>
+    /// Вставляем точку
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    public void PushGraphData(TimeSpan x, double y)
+    {
+        Controller.PushData(x, y);
+    }
+
+    /// <summary>
+    /// Рисуем график из файла
+    /// </summary>
+    /// <param name="filename"></param>
+    public void DrawFileGraph(string filename, long sampleRate)
+    {
+        var strArray = File.ReadAllLines(filename);
+        var yArray = strArray.Select(x => new DoubleDataPoint(short.Parse(x))).ToArray();
+        var period = new TimeSpan(sampleRate);
+        var xArray = new List<TimeSpanDataPoint>();
+        for(var i = 0; i < yArray.Length; i++)
+        {
+            var ts = new TimeSpan(period.Ticks*i);
+            var res = new TimeSpanDataPoint(ts);
+            xArray.Add(res);
+        };
+        Controller.Clear();
+        Controller.Range.MaximumX = new TimeSpan(period.Ticks * yArray.Length);
+        Controller.Range.MinimumY = -33000;
+        Controller.Range.MaximumY = 33000;
+        Controller.PushData(xArray, yArray);
+    }
 }

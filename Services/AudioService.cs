@@ -1,4 +1,5 @@
-﻿using AudioRecorder.Interfaces;
+﻿using AudioRecorder.Constants;
+using AudioRecorder.Interfaces;
 using NAudio.MediaFoundation;
 using NAudio.Wave;
 using System;
@@ -72,5 +73,26 @@ public class AudioService
         }
 
         return result;
+    }
+    /// <summary>
+    /// Получение параметров файла
+    /// </summary>
+    /// <param name="filename"></param>
+    /// <returns></returns>
+    public static WaveFormat GetHeader(string filename)
+    {
+        using var reader = new MediaFoundationReader(filename);
+        return reader.WaveFormat;
+
+    }
+    /// <summary>
+    /// Получение продолжительности сэмпла
+    /// </summary>
+    /// <param name="filename"></param>
+    /// <returns></returns>
+    public static long GetSamplePeriod(string filename)
+    {
+        var format = GetHeader(filename);
+        return AudioDefaults._ticksPerSecond / format.SampleRate;
     }
 }
