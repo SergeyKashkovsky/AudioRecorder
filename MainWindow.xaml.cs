@@ -75,9 +75,7 @@ namespace AudioRecorder
                 };
 
                 _writer = new WaveFileWriter(_fileName.Replace(".txt", ".wav"), waveFormat);
-                //Дефолтное устройство для записи (если оно имеется)
-                //встроенный микрофон ноутбука имеет номер 0
-                _waveIn.DeviceNumber = 0;
+                _waveIn.DeviceNumber = _viewModel.AudioDevice.Id;
                 //Прикрепляем к событию DataAvailable обработчик, возникающий при наличии записываемых данных
                 _waveIn.DataAvailable += WaveInDataAvailable!;
                 //Прикрепляем обработчик завершения записи

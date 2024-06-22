@@ -1,5 +1,6 @@
 ﻿using AudioRecorder.Interfaces;
 using AudioRecorder.Services;
+using NAudio.Wave;
 using RealTimeGraphX;
 using RealTimeGraphX.DataPoints;
 using RealTimeGraphX.Renderers;
@@ -22,6 +23,17 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private const string _firstTabDefaultStatus = "Ожидание запуска. Частота дискретизации: 16кГц, 16 бит, моно";
     private const string _secondTabDefaultStatus = "Откройте файл в формате wav или mp3";
     private readonly IDialogService _dialogService = new DefaultDialogService();
+
+    /// <summary>
+    /// Коллекция аудио-устройств
+    /// </summary>
+    public List<AudioDevice> AudioDevices { get; set; }
+    
+    /// <summary>
+    /// Выбранное аудио-устройство
+    /// </summary>
+    public AudioDevice AudioDevice { get; set; }
+
     private string? _statusText;
     /// <summary>
     /// Текст статуса работы приложения
@@ -108,6 +120,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             OnPropertyChanged("Amplitude");
         } 
     }
+
     /// <summary>
     /// Амплитуда сигнала: модуль уровня
     /// </summary>
@@ -126,6 +139,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             Name = "Series",
             Stroke = Colors.DodgerBlue,
         });
+        GetAudioDevices();
 
     }
     /// <summary>
@@ -183,5 +197,19 @@ public class MainWindowViewModel : INotifyPropertyChanged
         Controller.Range.MinimumY = -33000;
         Controller.Range.MaximumY = 33000;
         Controller.PushData(xArray, yArray);
+    }
+
+    /// <summary>
+    /// Получение списка аудиоустройств
+    /// </summary>
+    public void GetAudioDevices()
+    {
+        AudioDevices = new List<AudioDevice>();
+        for (int n = -1; n < WaveIn.DeviceCount; n++)
+        {
+            var caps = WaveIn.GetCapabilities(n);
+            AudioDevices.Add(new AudioDevice(caps, n));
+        }
+        AudioDevice = AudioDevices.FirstOrDefault(x => x.Id == 0)!;
     }
 }
