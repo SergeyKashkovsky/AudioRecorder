@@ -1,4 +1,5 @@
-﻿using AudioRecorder.Interfaces;
+﻿using AudioRecorder.Constants;
+using AudioRecorder.Interfaces;
 using AudioRecorder.Models;
 using AudioRecorder.Services;
 using NAudio.Wave;
@@ -36,7 +37,7 @@ namespace AudioRecorder
         private WaveFileWriter _writer;
         private int cnt = 0;
         private TimeSpan _graphX;
-        private readonly TimeSpan _period = new TimeSpan(62500);
+        private readonly TimeSpan _period = new TimeSpan(AudioDefaults._microphoneSamplePeriod);//62500);
 
         public MainWindow()
         {
@@ -144,7 +145,7 @@ namespace AudioRecorder
             _waveIn?.Dispose();
             _streamWriter?.Dispose();
             _waveIn = null;
-            _viewModel.DrawFileGraph(_fileName!, 62500);
+            _viewModel.DrawFileGraph(_fileName!, AudioDefaults._microphoneSamplePeriod);// 62500);
         }
 
         /// <summary>
@@ -191,8 +192,9 @@ namespace AudioRecorder
             try
             {
                 var files = AudioService.ProcessFile(_fileName, needForRightChannelCheckBox.IsChecked == true, fileName);
-                _viewModel.StatusText = String.Format("Закончена обработка файла {0}. Результат: {1}", _fileName, String.Join(", ", files));
                 _viewModel.DrawFileGraph(fileName, AudioService.GetSamplePeriod(_fileName));
+                _viewModel.StatusText = String.Format("Закончена обработка файла {0}. Результат: {1}", _fileName, String.Join(", ", files));
+                
             }
             catch(Exception ex)
             {

@@ -136,7 +136,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         Controller.Clear();
         Controller.Range.MinimumY = -33000;
         Controller.Range.MaximumY = 33000;
-        Controller.Range.MaximumX = TimeSpan.FromSeconds(10);
+        Controller.Range.MaximumX = TimeSpan.FromSeconds(2);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -168,7 +168,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
     /// <param name="filename"></param>
     public void DrawFileGraph(string filename, long sampleRate)
     {
-        _statusText = "Строим график";
         var strArray = File.ReadAllLines(filename);
         var yArray = strArray.Select(x => new DoubleDataPoint(short.Parse(x))).ToArray();
         var period = new TimeSpan(sampleRate);
@@ -184,6 +183,5 @@ public class MainWindowViewModel : INotifyPropertyChanged
         Controller.Range.MinimumY = -33000;
         Controller.Range.MaximumY = 33000;
         Controller.PushData(xArray, yArray);
-        _statusText = "Построили график";
     }
 }
