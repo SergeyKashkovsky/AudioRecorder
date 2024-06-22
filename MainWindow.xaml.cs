@@ -37,7 +37,7 @@ namespace AudioRecorder
         private WaveFileWriter _writer;
         private int cnt = 0;
         private TimeSpan _graphX;
-        private readonly TimeSpan _period = new TimeSpan(AudioDefaults._microphoneSamplePeriod);//62500);
+        private readonly TimeSpan _period = new TimeSpan(AudioDefaults._microphoneSamplePeriod);
 
         public MainWindow()
         {
@@ -145,7 +145,7 @@ namespace AudioRecorder
             _waveIn?.Dispose();
             _streamWriter?.Dispose();
             _waveIn = null;
-            _viewModel.DrawFileGraph(_fileName!, AudioDefaults._microphoneSamplePeriod);// 62500);
+            _viewModel.DrawFileGraph(_fileName!, AudioDefaults._microphoneSamplePeriod);
         }
 
         /// <summary>
