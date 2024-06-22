@@ -1,5 +1,6 @@
 ﻿using AudioRecorder.Interfaces;
 using AudioRecorder.Services;
+using NAudio.Wave;
 using RealTimeGraphX;
 using RealTimeGraphX.DataPoints;
 using RealTimeGraphX.Renderers;
@@ -126,6 +127,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             Name = "Series",
             Stroke = Colors.DodgerBlue,
         });
+        GetAudioDevices();
 
     }
     /// <summary>
@@ -183,5 +185,17 @@ public class MainWindowViewModel : INotifyPropertyChanged
         Controller.Range.MinimumY = -33000;
         Controller.Range.MaximumY = 33000;
         Controller.PushData(xArray, yArray);
+    }
+
+    private List<string> _devices = new List<string>();
+
+    public void GetAudioDevices()
+    {
+        for (int n = -1; n < WaveIn.DeviceCount; n++)
+        {
+            var caps = WaveIn.GetCapabilities(n);
+            //Console.WriteLine($"{n}: {caps.ProductName}");
+            _devices.Add(caps.ProductName);
+        }
     }
 }
