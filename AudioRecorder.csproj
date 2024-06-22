@@ -6,10 +6,16 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>Icons\icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Icons\icon.png" />
     <None Remove="Icons\icon.svg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Icons\icon.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,7 +25,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Icons\icon.svg" />
+    <Resource Include="Icons\icon.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Icons\icon.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
