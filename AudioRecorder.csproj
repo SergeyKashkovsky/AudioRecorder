@@ -9,9 +9,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Icons\icon.svg" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="RealTimeGraphX" Version="1.0.17" />
     <PackageReference Include="RealTimeGraphX.WPF" Version="1.0.17" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Icons\icon.svg" />
   </ItemGroup>
 
 </Project>

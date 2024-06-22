@@ -8,7 +8,8 @@
         xmlns:converters="clr-namespace:AudioRecorder.Converters"
         xmlns:collections="clr-namespace:System.Collections;assembly=mscorlib"
         mc:Ignorable="d"
-        Title="AudioRecorder" Height="341" Width="662">
+        Title="AudioRecorder" Height="341" Width="662"
+        Icon="Icons/icon.svg">
 
     <Window.Resources>
 
