@@ -9,7 +9,7 @@
         xmlns:collections="clr-namespace:System.Collections;assembly=mscorlib"
         mc:Ignorable="d"
         Title="AudioRecorder" Height="341" Width="662"
-        Icon="Icons/icon.svg">
+        Icon="Icons/icon.png">
 
     <Window.Resources>
 
