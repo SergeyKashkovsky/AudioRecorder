@@ -122,6 +122,20 @@ public class MainWindowViewModel : INotifyPropertyChanged
         } 
     }
 
+    private string _sampleFileParams;
+    /// <summary>
+    /// Параметры файла амплитуд
+    /// </summary>
+    public string SampleFileParams
+    {
+        get => _sampleFileParams;
+        set
+        {
+            _sampleFileParams = value;
+            OnPropertyChanged("SampleFileParams");
+        }
+    }
+
     /// <summary>
     /// Амплитуда сигнала: модуль уровня
     /// </summary>

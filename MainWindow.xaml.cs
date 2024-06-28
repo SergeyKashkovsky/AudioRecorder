@@ -202,5 +202,25 @@ namespace AudioRecorder
             }
             
         }
+
+        /// <summary>
+        /// Обработка нажатия на кнопку открытия файла амплитуд
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OpenSamplesFileButtonClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var dialogService = new DefaultDialogService();
+                if (!dialogService.OpenFileDialog(false)) return;
+                _viewModel.DrawFileGraph(dialogService.FilePath);
+                _viewModel.SampleFileParams = string.Format("{0} ({1})", dialogService.FilePath, AudioService.GetSampleFileAudioParams(dialogService.FilePath));
+            }
+            catch (Exception ex)
+            {
+                _viewModel.StatusText = String.Format("Ошибка при попытке открытия файла: {0}", ex.Message);
+            }
+        }
     }
 }

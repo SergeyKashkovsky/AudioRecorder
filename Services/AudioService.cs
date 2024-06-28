@@ -103,4 +103,17 @@ public class AudioService
         var format = GetHeader(filename);
         return AudioDefaults._ticksPerSecond / format.SampleRate;
     }
+    /// <summary>
+    /// Получение параметров файла амплитуд
+    /// </summary>
+    /// <param name="filename"></param>
+    /// <returns></returns>
+    public static WaveFormat GetSampleFileAudioParams(string filename) 
+    {
+        var file = File.ReadAllLines(filename);
+        var lastString = file.Last().ToFileRecordModel().Time.Ticks;
+        var averageSampleTicks = lastString / file.Length;
+        var sampleRate = AudioDefaults._ticksPerSecond / averageSampleTicks;
+        return new WaveFormat((int)sampleRate, 1);
+    }
 }
