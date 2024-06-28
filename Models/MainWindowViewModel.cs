@@ -1,4 +1,5 @@
-﻿using AudioRecorder.Interfaces;
+﻿using AudioRecorder.Extensions;
+using AudioRecorder.Interfaces;
 using AudioRecorder.Services;
 using NAudio.Wave;
 using RealTimeGraphX;
@@ -180,20 +181,20 @@ public class MainWindowViewModel : INotifyPropertyChanged
     /// Рисуем график из файла
     /// </summary>
     /// <param name="filename"></param>
-    public void DrawFileGraph(string filename, long sampleRate)
+    public void DrawFileGraph(string filename)
     {
         var strArray = File.ReadAllLines(filename);
-        var yArray = strArray.Select(x => new DoubleDataPoint(short.Parse(x))).ToArray();
-        var period = new TimeSpan(sampleRate);
-        var xArray = new List<TimeSpanDataPoint>();
-        for(var i = 0; i < yArray.Length; i++)
+        var samples = strArray.Select(x => x.ToFileRecordModel());
+        var maxX = samples.Last().Time;    
+        var arrays = samples.Select(x => new
         {
-            var ts = new TimeSpan(period.Ticks*i);
-            var res = new TimeSpanDataPoint(ts);
-            xArray.Add(res);
-        };
+            X = new TimeSpanDataPoint(x.Time),
+            Y = new DoubleDataPoint(x.Sample)
+        }).OrderBy(x=>x.X).ToArray();
+        var xArray = arrays.Select(x => x.X).ToArray();
+        var yArray = arrays.Select(x => x.Y).ToArray();
         Controller.Clear();
-        Controller.Range.MaximumX = new TimeSpan(period.Ticks * yArray.Length);
+        Controller.Range.MaximumX = maxX;
         Controller.Range.MinimumY = -33000;
         Controller.Range.MaximumY = 33000;
         Controller.PushData(xArray, yArray);
