@@ -1,4 +1,5 @@
 ﻿using AudioRecorder.Constants;
+using AudioRecorder.Extensions;
 using AudioRecorder.Interfaces;
 using AudioRecorder.Models;
 using AudioRecorder.Services;
@@ -119,7 +120,8 @@ namespace AudioRecorder
                     var sample = (short)((e.Buffer[i + 1] << 8) | e.Buffer[i + 0]);
                     _graphX = _graphX.Add(_period);
                     _viewModel.PushGraphData(_graphX, sample);
-                    _streamWriter!.WriteLineAsync(sample.ToString()).GetAwaiter().GetResult();
+                     
+                    _streamWriter!.WriteLineAsync(_graphX.GetFileSting(sample)).GetAwaiter().GetResult();
                     
                 }
                 _writer!.WriteAsync(e.Buffer, 0, e.BytesRecorded);
@@ -143,7 +145,7 @@ namespace AudioRecorder
             _waveIn?.Dispose();
             _streamWriter?.Dispose();
             _waveIn = null;
-            _viewModel.DrawFileGraph(_fileName!, AudioDefaults._microphoneSamplePeriod);
+            _viewModel.DrawFileGraph(_fileName!);
         }
 
         /// <summary>
@@ -190,7 +192,7 @@ namespace AudioRecorder
             try
             {
                 var files = AudioService.ProcessFile(_fileName, needForRightChannelCheckBox.IsChecked == true, fileName);
-                _viewModel.DrawFileGraph(fileName, AudioService.GetSamplePeriod(_fileName));
+                _viewModel.DrawFileGraph(fileName);
                 _viewModel.StatusText = String.Format("Закончена обработка файла {0}. Результат: {1}", _fileName, String.Join(", ", files));
                 
             }

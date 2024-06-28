@@ -1,4 +1,5 @@
 ﻿using AudioRecorder.Constants;
+using AudioRecorder.Extensions;
 using AudioRecorder.Interfaces;
 using NAudio.MediaFoundation;
 using NAudio.Wave;
@@ -9,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Windows.Forms.DataFormats;
 
 namespace AudioRecorder.Services;
 
@@ -29,6 +31,10 @@ public class AudioService
     {
         using var reader = new MediaFoundationReader(filePath);
         var hdrInfo = reader.WaveFormat;
+        var sampleRate = AudioDefaults._ticksPerSecond / hdrInfo.SampleRate;
+        var period = new TimeSpan(sampleRate);
+        var timePosition = new TimeSpan();
+
         if (hdrInfo.Channels > 2)
             throw new NotImplementedException("Пока не могу обрабатывать более двух каналов");
 
@@ -55,16 +61,18 @@ public class AudioService
         var samplesPerTick = hdrInfo.Channels == 1 ? 2 : 4;
         for (int i = 0; i < reader.Length; i += samplesPerTick)
         {
+            timePosition = timePosition.Add(period);
             try
             {
                 if (i >= bytes.Length-1) return result;
 
                 var leftSample = (short)((bytes[i + 1] << 8) | bytes[i]);
-                streamWriter!.WriteLineAsync(leftSample.ToString()).GetAwaiter().GetResult();
+                streamWriter!.WriteLineAsync(timePosition.GetFileSting(leftSample)).GetAwaiter().GetResult();
                 if (hdrInfo.Channels > 1 && needToWriteRightChannel && bytes.Length > (i + 2) && bytes.Length >= (i + 3))
                 {
                     var rightSample = (short)((bytes[i + 3] << 8) | bytes[i + 2]);
-                    rightStreamWriter!.WriteLineAsync(rightSample.ToString()).GetAwaiter().GetResult();
+                    
+                    rightStreamWriter!.WriteLineAsync(timePosition.GetFileSting(rightSample)).GetAwaiter().GetResult();
                 }
             }
             catch{}
