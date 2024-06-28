@@ -2,6 +2,9 @@
 
 namespace AudioRecorder.Extensions;
 
+/// <summary>
+/// Методы расширения для работы с файлом амплитуд
+/// </summary>
 public static class FileStringExtension
 {
     /// <summary>
