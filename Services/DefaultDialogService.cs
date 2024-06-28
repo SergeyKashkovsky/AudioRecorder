@@ -15,12 +15,15 @@ public class DefaultDialogService: IDialogService
     /// <inheritdoc/>
     public string FilePath { get; set; } = string.Empty;
 
+    private const string _audioFilter = "Аудио Файлы (.wav;.aac;.mp3;.m4a)|*.wav;*.aac;*.mp3;*.m4a";
+    private const string _sampleFilter = "Файлы амплитуд (.txt)|*.txt";
+
     /// <inheritdoc/>
-    public bool OpenFileDialog()
+    public bool OpenFileDialog(bool audio = true)
     {
         var openFileDialog = new OpenFileDialog
         {
-            Filter = "Аудио Файлы (.wav;.aac;.mp3;.m4a)|*.wav;*.aac;*.mp3;*.m4a"
+            Filter = audio ? _audioFilter : _sampleFilter
         };
         if (openFileDialog.ShowDialog() != DialogResult.OK) return false;
         FilePath = openFileDialog.FileName;
