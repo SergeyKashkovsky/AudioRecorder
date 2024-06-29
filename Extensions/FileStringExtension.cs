@@ -14,7 +14,7 @@ public static class FileStringExtension
     /// <param name="sample"></param>
     /// <returns></returns>
     public static string GetFileSting(this TimeSpan timeSpan, short sample)
-        => string.Format("{0}|{1}", timeSpan.TotalMilliseconds.ToString(), sample.ToString());
+        => string.Format("{0}|{1}", timeSpan.Ticks.ToString(), sample.ToString());
     /// <summary>
     /// Получения сэмпла аудио из строки файла
     /// </summary>
@@ -25,7 +25,7 @@ public static class FileStringExtension
         var sample = fileString.Split('|');
         return new FileRecordModel
         {
-            Time = TimeSpan.FromMilliseconds(Convert.ToDouble(sample[0])),
+            Time = new TimeSpan(long.Parse(sample[0])),
             Sample = short.Parse(sample[1])
         };
     }
