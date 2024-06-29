@@ -38,7 +38,7 @@ namespace AudioRecorder
         private WaveFileWriter _writer;
         private int cnt = 0;
         private TimeSpan _graphX;
-        private readonly TimeSpan _period = new TimeSpan(AudioDefaults._microphoneSamplePeriod);
+        private readonly TimeSpan _period = new TimeSpan(AudioDefaults.MicrophoneSamplePeriod);
 
         public MainWindow()
         {

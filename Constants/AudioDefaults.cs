@@ -14,9 +14,9 @@ public class AudioDefaults
     /// <summary>
     /// Количество тактов в секунду
     /// </summary>
-    public const long _ticksPerSecond = 1_0_000_000L;
+    public const long _ticksPerSecond = 10_000_000L;
     /// <summary>
     /// Продолжительность сэмпла микрофона по умолчанию
     /// </summary>
-    public static long _microphoneSamplePeriod => _ticksPerSecond / 16000;
+    public static long MicrophoneSamplePeriod => _ticksPerSecond / 16000;
 }
