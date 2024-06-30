@@ -41,6 +41,11 @@ public class AudioService
     public void BeginMicrophoneRecord(string filename)
     {
         _fileName = filename;
+        if (string.IsNullOrEmpty(_fileName))
+        {
+            _viewModel.StatusText = "Не выбран файл, куда писать";
+            return;
+        }
         _viewModel.IsRecording = true;
         _viewModel.StatusText = String.Format("Начата запись в файл: {0}", _fileName);
         try
@@ -120,9 +125,11 @@ public class AudioService
         _waveIn?.Dispose();
         _streamWriter?.Dispose();
         _waveIn = null;
-        _viewModel.DrawFileGraph(_fileName!);
+        var data = ReadFileData(_fileName!);
+        _viewModel.DrawFileGraph(data);
     }
     #endregion
+
     #region Функционал записи из аудио-файла
     /// <summary>
     /// Получаем параметры аудио файла, готовим сервис к работе с ним
@@ -160,7 +167,8 @@ public class AudioService
         try
         {
             var files = AudioService.ProcessFile(_fileName, _viewModel.WriteRightChannel, fileName);
-            _viewModel.DrawFileGraph(files.First());
+            var data = ReadFileData(files.First());
+            _viewModel.DrawFileGraph(data);
             _viewModel.StatusText = String.Format("Закончена обработка файла {0}. Результат: {1}", _fileName, String.Join(", ", files));
         }
         catch (Exception ex)
@@ -220,16 +228,43 @@ public class AudioService
                 if (hdrInfo.Channels > 1 && needToWriteRightChannel && bytes.Length > (i + 2) && bytes.Length >= (i + 3))
                 {
                     var rightSample = (short)((bytes[i + 3] << 8) | bytes[i + 2]);
-
                     rightStreamWriter!.WriteLineAsync(timePosition.GetFileSting(rightSample)).GetAwaiter().GetResult();
                 }
             }
             catch { }
         }
+        rightStreamWriter?.Dispose();
         return result;
     }
     #endregion
-    
+
+    #region Функционал открытия файла амплитуд
+
+    /// <summary>
+    /// Открываем файл амплитуд
+    /// </summary>
+    /// <param name="filename"></param>
+    public void OpenSampleFile(string filename)
+    {
+        _fileName = filename;
+        if (string.IsNullOrEmpty(_fileName)) return;
+        try
+        {
+            _viewModel.StatusText = string.Format("Читаю файл {0}", _fileName);
+            _viewModel.SampleFileParams = string.Format("{0} ({1})", _fileName, AudioService.GetSampleFileAudioParams(_fileName));
+            var data = ReadFileData(_fileName!);
+            _viewModel.DrawFileGraph(data);
+            _viewModel.StatusText = string.Format("Файл {0} прочитан", _fileName);
+
+        }
+        catch (Exception ex)
+        {
+            _viewModel.StatusText = String.Format("Ошибка при попытке открытия файла {0}: {1}", _fileName, ex.Message);
+        }
+    }
+
+    #endregion
+
     /// <summary>
     /// Получение параметров файла
     /// </summary>

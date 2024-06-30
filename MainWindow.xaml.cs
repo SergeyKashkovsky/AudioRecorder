@@ -28,7 +28,7 @@ namespace AudioRecorder
         }
 
         /// <summary>
-        /// Запуск записи в файл
+        /// Запуск записи в файл из микрофона
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -37,17 +37,11 @@ namespace AudioRecorder
             
             var dialogService = new DefaultDialogService();
             _fileName = dialogService.SaveFileDialog();
-            if (string.IsNullOrEmpty(_fileName))
-            {
-                _viewModel.StatusText = "Не выбран файл, куда писать";
-                return;
-            }
-
             _audioService.BeginMicrophoneRecord(_fileName);
         }
 
         /// <summary>
-        /// Остановка записи
+        /// Остановка записи микрофона
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -57,7 +51,7 @@ namespace AudioRecorder
         }
 
         /// <summary>
-        /// Обработчик события нажатия кнопки открытия файла
+        /// Обработчик события нажатия кнопки открытия аудио файла
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -87,20 +81,9 @@ namespace AudioRecorder
         /// <param name="e"></param>
         private void OpenSamplesFileButtonClick(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                var dialogService = new DefaultDialogService();
-                if (!dialogService.OpenFileDialog(false)) return;
-                _viewModel.StatusText = string.Format("Читаю файл {0}", dialogService.FilePath);
-                _viewModel.SampleFileParams = string.Format("{0} ({1})", dialogService.FilePath, AudioService.GetSampleFileAudioParams(dialogService.FilePath));
-                _viewModel.DrawFileGraph(dialogService.FilePath);
-                _viewModel.StatusText = string.Format("Файл {0} прочитан", dialogService.FilePath);
-
-            }
-            catch (Exception ex)
-            {
-                _viewModel.StatusText = String.Format("Ошибка при попытке открытия файла: {0}", ex.Message);
-            }
+            var dialogService = new DefaultDialogService();
+            if (!dialogService.OpenFileDialog(false)) return;
+            _audioService.OpenSampleFile(dialogService.FilePath);
         }
     }
 }

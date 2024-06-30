@@ -215,16 +215,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Рисуем график из файла
-    /// </summary>
-    /// <param name="filename"></param>
-    public void DrawFileGraph(string filename)
-    {
-        var data = AudioService.ReadFileData(filename);
-        DrawFileGraph(data);
-    }
-
-    /// <summary>
     /// Рисуем график по массивам точек
     /// </summary>
     /// <param name="xArray"></param>
