@@ -21,10 +21,9 @@ namespace AudioRecorder.Models;
 /// </summary>
 public class MainWindowViewModel : INotifyPropertyChanged
 {
-    private const string _firstTabDefaultStatus = "Ожидание запуска. Частота дискретизации: 16кГц, 16 бит, моно";
+    private readonly static string _firstTabDefaultStatus = $"Ожидание запуска. Параметры записи: {new WaveFormat(16000, 16, 1)}";
     private const string _secondTabDefaultStatus = "Откройте файл в формате wav или mp3";
     private const string _thirdTabDefaultStatus = "Откройте файл амплитуд в формате .txt";
-    private readonly IDialogService _dialogService = new DefaultDialogService();
 
     /// <summary>
     /// Коллекция аудио-устройств
@@ -35,6 +34,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
     /// Выбранное аудио-устройство
     /// </summary>
     public AudioDevice AudioDevice { get; set; } = new AudioDevice();
+
+    #region Свойства и поля для привязки
 
     private string? _statusText;
     /// <summary>
@@ -73,6 +74,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
     }
 
     private bool _isFileOpened;
+    /// <summary>
+    /// Открыт ли файл
+    /// </summary>
     public bool IsFileOpened
     {
         get => _isFileOpened;
@@ -114,7 +118,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             _signalLevel = value;
             OnPropertyChanged("SignalLevel");
-            OnPropertyChanged("Amplitude");
         } 
     }
 
@@ -132,12 +135,42 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    private bool _needForRightChannel = false;
+    /// <summary>
+    /// Есть ли возможность писать правый канал аудиофайла в файл амплитуд
+    /// </summary>
+    public bool NeedForRightChannel
+    {
+        get => _needForRightChannel;
+        set
+        {
+            _needForRightChannel = value;
+            OnPropertyChanged("NeedForRightChannel");
+        }
+    }
+
+    private bool _writeRightChannell = false;
+    /// <summary>
+    /// Нужно ли писать в файл правый аудиоканал при чтении аудио-файла
+    /// </summary>
+    public bool WriteRightChannel
+    {
+        get => _writeRightChannell;
+        set
+        {
+            _writeRightChannell = value;
+            OnPropertyChanged("NeedForRightChannel");
+        }
+    }
+
+    #endregion
+
     /// <summary>
     /// Конструктор модели представления
     /// </summary>
     public MainWindowViewModel()
     {
-        StatusText = "Ожидание запуска. Частота дискретизации: 16кГц, 16 бит, моно";
+        StatusText = _firstTabDefaultStatus;
 
         Controller = new WpfGraphController<TimeSpanDataPoint, DoubleDataPoint>();
         Controller.DataSeriesCollection.Add(new WpfGraphDataSeries()

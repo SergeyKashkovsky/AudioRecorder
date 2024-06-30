@@ -21,8 +21,155 @@ namespace AudioRecorder.Services;
 /// </summary>
 public class AudioService
 {
+    private readonly MainWindowViewModel _viewModel;
+    private string? _fileName = string.Empty;
+    private WaveIn? _waveIn = null; 
+    private StreamWriter? _streamWriter = null;
+    private WaveFileWriter? _writer = null;
+    private TimeSpan _graphX;
+    private readonly TimeSpan _period = new(AudioDefaults.MicrophoneSamplePeriod);
+
+    public AudioService(MainWindowViewModel viewModel)
+    {
+        _viewModel = viewModel;
+    }
+    #region Функционал записи из микрофона
     /// <summary>
-    /// Обработка любого файла
+    /// Начинаем писать микрофон
+    /// </summary>
+    /// <param name="filename"></param>
+    public void BeginMicrophoneRecord(string filename)
+    {
+        _fileName = filename;
+        _viewModel.IsRecording = true;
+        _viewModel.StatusText = String.Format("Начата запись в файл: {0}", _fileName);
+        try
+        {
+            var waveFormat = new WaveFormat(16000, 16, 1);
+            _waveIn = new WaveIn
+            {
+                BufferMilliseconds = 100,
+                DeviceNumber = 0,
+                WaveFormat = waveFormat,
+            };
+
+            _writer = new WaveFileWriter(_fileName.Replace(".txt", ".wav"), waveFormat);
+            _waveIn.DeviceNumber = _viewModel.AudioDevice.Id;
+            //Прикрепляем к событию DataAvailable обработчик, возникающий при наличии записываемых данных
+            _waveIn.DataAvailable += WaveInDataAvailable!;
+            //Прикрепляем обработчик завершения записи
+            _waveIn.RecordingStopped += WaveInRecordingStopped!;
+            _streamWriter = new StreamWriter(_fileName);
+            _waveIn.StartRecording();
+            _graphX = new TimeSpan();
+            _viewModel.InitControllerForMic();
+        }
+        catch (Exception ex)
+        {
+            _viewModel.IsRecording = false;
+            _viewModel.StatusText = String.Format("Ошибка: {0}, выполнение программы не возможно.", ex.Message);
+        }
+    }
+    /// <summary>
+    /// Завершение записи микрофона
+    /// </summary>
+    public void EndMicrophoneRecord()
+    {
+        _viewModel.IsRecording = false;
+        _waveIn?.StopRecording();
+        _viewModel.StatusText = String.Format("Запись в файл: {0} остановлена. Ожидание запуска", _fileName);
+    }
+
+    /// <summary>
+    /// Обработка события поступления данных от микрофона
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void WaveInDataAvailable(object sender, WaveInEventArgs e)
+    {
+        try
+        {
+            for (int i = 0; i < e.BytesRecorded; i += 2)
+            {
+                var sample = (short)((e.Buffer[i + 1] << 8) | e.Buffer[i + 0]);
+                _graphX = _graphX.Add(_period);
+                _viewModel.PushGraphData(_graphX, sample);
+
+                _streamWriter!.WriteLineAsync(_graphX.GetFileSting(sample)).GetAwaiter().GetResult();
+
+            }
+            _writer!.WriteAsync(e.Buffer, 0, e.BytesRecorded);
+        }
+        catch (Exception ex)
+        {
+            _viewModel.IsRecording = false;
+            _viewModel.StatusText = String.Format("Ошибка {0}, останавливаю запись в файл {1}", ex.Message, _fileName);
+            _waveIn?.StopRecording();
+        }
+    }
+
+    /// <summary>
+    /// Обработка события остановки слушателя событий микрофона
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void WaveInRecordingStopped(object sender, EventArgs e)
+    {
+        _writer!.Close();
+        _writer.Dispose();
+        _waveIn?.Dispose();
+        _streamWriter?.Dispose();
+        _waveIn = null;
+        _viewModel.DrawFileGraph(_fileName!);
+    }
+    #endregion
+    #region Функционал записи из аудио-файла
+    /// <summary>
+    /// Получаем параметры аудио файла, готовим сервис к работе с ним
+    /// </summary>
+    /// <param name="fileName">Путь к аудиофайлу</param>
+    public void PrepareToReadAudioFile(string fileName)
+    {
+        try
+        {
+            _fileName = fileName;
+            var ft = GetHeader(_fileName);
+            if (ft.Channels > 1) _viewModel.NeedForRightChannel = true;
+            _viewModel.StatusText = String.Format("Выбран файл {0}, параметры: {1}", _fileName, ft);
+            _viewModel.IsFileOpened = true;
+        }
+        catch (Exception ex)
+        {
+            _viewModel.StatusText = String.Format("Ошибка при попытке открытия файла: {0}", ex.Message);
+        }
+    }
+    /// <summary>
+    /// Читаем аудиофайл, создаем файл амплитуд
+    /// </summary>
+    /// <param name="fileName">Путь к файлу амплитуд</param>
+    public void ReadAudiofile(string fileName)
+    {
+        if (string.IsNullOrEmpty(fileName))
+            return;
+        if (string.IsNullOrEmpty(_fileName))
+        {
+            _viewModel.StatusText = "Файл не выбран, как у вас получилось нажать эту кнопку?";
+            return;
+        }
+        _viewModel.StatusText = String.Format("Начата обработка файла {0}", _fileName);
+        try
+        {
+            var files = AudioService.ProcessFile(_fileName, _viewModel.WriteRightChannel, fileName);
+            _viewModel.DrawFileGraph(files.First());
+            _viewModel.StatusText = String.Format("Закончена обработка файла {0}. Результат: {1}", _fileName, String.Join(", ", files));
+        }
+        catch (Exception ex)
+        {
+            _viewModel.StatusText = String.Format("Ошибка при обработке файла {0}: {1}", _fileName, ex.Message);
+        }
+    }
+    /// <summary>
+    /// Обработка аудио файла
     /// </summary>
     /// <param name="filePath"></param>
     /// <param name="needToWriteRightChannel"></param>
@@ -66,24 +213,23 @@ public class AudioService
             timePosition = timePosition.Add(period);
             try
             {
-                if (i >= bytes.Length-1) return result;
+                if (i >= bytes.Length - 1) return result;
 
                 var leftSample = (short)((bytes[i + 1] << 8) | bytes[i]);
                 streamWriter!.WriteLineAsync(timePosition.GetFileSting(leftSample)).GetAwaiter().GetResult();
                 if (hdrInfo.Channels > 1 && needToWriteRightChannel && bytes.Length > (i + 2) && bytes.Length >= (i + 3))
                 {
                     var rightSample = (short)((bytes[i + 3] << 8) | bytes[i + 2]);
-                    
+
                     rightStreamWriter!.WriteLineAsync(timePosition.GetFileSting(rightSample)).GetAwaiter().GetResult();
                 }
             }
-            catch{}
-
-            
+            catch { }
         }
-
         return result;
     }
+    #endregion
+    
     /// <summary>
     /// Получение параметров файла
     /// </summary>
