@@ -1,17 +1,8 @@
-﻿using AudioRecorder.Extensions;
-using AudioRecorder.Interfaces;
-using AudioRecorder.Services;
-using NAudio.Wave;
-using RealTimeGraphX;
+﻿using NAudio.Wave;
 using RealTimeGraphX.DataPoints;
-using RealTimeGraphX.Renderers;
 using RealTimeGraphX.WPF;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using System.Windows;
 using System.Windows.Media;
 
 namespace AudioRecorder.Models;
@@ -21,19 +12,21 @@ namespace AudioRecorder.Models;
 /// </summary>
 public class MainWindowViewModel : INotifyPropertyChanged
 {
-    private const string _firstTabDefaultStatus = "Ожидание запуска. Частота дискретизации: 16кГц, 16 бит, моно";
+    private readonly static string _firstTabDefaultStatus = $"Ожидание запуска. Параметры записи: {new WaveFormat(16000, 16, 1)}";
     private const string _secondTabDefaultStatus = "Откройте файл в формате wav или mp3";
-    private readonly IDialogService _dialogService = new DefaultDialogService();
+    private const string _thirdTabDefaultStatus = "Откройте файл амплитуд в формате .txt";
 
     /// <summary>
     /// Коллекция аудио-устройств
     /// </summary>
-    public List<AudioDevice> AudioDevices { get; set; }
-    
+    public List<AudioDevice> AudioDevices { get; set; } = new List<AudioDevice>();
+
     /// <summary>
     /// Выбранное аудио-устройство
     /// </summary>
-    public AudioDevice AudioDevice { get; set; }
+    public AudioDevice AudioDevice { get; set; } = new AudioDevice();
+
+    #region Свойства и поля для привязки
 
     private string? _statusText;
     /// <summary>
@@ -59,24 +52,22 @@ public class MainWindowViewModel : INotifyPropertyChanged
         set
         {
             _tabSelectedIndex = value;
-            StatusText = _tabSelectedIndex <=0 ? _firstTabDefaultStatus : _secondTabDefaultStatus;
             IsFileOpened = false;
+            StatusText = _tabSelectedIndex switch
+            {
+                0 => _firstTabDefaultStatus,
+                1 => _secondTabDefaultStatus,
+                2 => _thirdTabDefaultStatus,
+                _ => string.Empty
+            };
             OnPropertyChanged("TabSelectedIndex");
-            OnPropertyChanged("MicrophoneUICollapsed");
-            OnPropertyChanged("FileUICollapsed");
         }
     }
 
-    /// <summary>
-    /// Отображаем или скрываем запись потока с микрофона
-    /// </summary>
-    public Visibility MicrophoneUICollapsed => TabSelectedIndex > 0 ? Visibility.Collapsed : Visibility.Visible;
-    /// <summary>
-    /// Отображаем или скрываем запись потока из файла
-    /// </summary>
-    public Visibility FileUICollapsed => TabSelectedIndex != 1 ? Visibility.Collapsed : Visibility.Visible;
-
     private bool _isFileOpened;
+    /// <summary>
+    /// Открыт ли файл
+    /// </summary>
     public bool IsFileOpened
     {
         get => _isFileOpened;
@@ -118,11 +109,10 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             _signalLevel = value;
             OnPropertyChanged("SignalLevel");
-            OnPropertyChanged("Amplitude");
         } 
     }
 
-    private string _sampleFileParams;
+    private string _sampleFileParams = string.Empty;
     /// <summary>
     /// Параметры файла амплитуд
     /// </summary>
@@ -136,17 +126,42 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    private bool _needForRightChannel = false;
     /// <summary>
-    /// Амплитуда сигнала: модуль уровня
+    /// Есть ли возможность писать правый канал аудиофайла в файл амплитуд
     /// </summary>
-    public int Amplitude => Math.Abs(SignalLevel);
+    public bool NeedForRightChannel
+    {
+        get => _needForRightChannel;
+        set
+        {
+            _needForRightChannel = value;
+            OnPropertyChanged("NeedForRightChannel");
+        }
+    }
+
+    private bool _writeRightChannell = false;
+    /// <summary>
+    /// Нужно ли писать в файл правый аудиоканал при чтении аудио-файла
+    /// </summary>
+    public bool WriteRightChannel
+    {
+        get => _writeRightChannell;
+        set
+        {
+            _writeRightChannell = value;
+            OnPropertyChanged("NeedForRightChannel");
+        }
+    }
+
+    #endregion
 
     /// <summary>
     /// Конструктор модели представления
     /// </summary>
     public MainWindowViewModel()
     {
-        StatusText = "Ожидание запуска. Частота дискретизации: 16кГц, 16 бит, моно";
+        StatusText = _firstTabDefaultStatus;
 
         Controller = new WpfGraphController<TimeSpanDataPoint, DoubleDataPoint>();
         Controller.DataSeriesCollection.Add(new WpfGraphDataSeries()
@@ -155,7 +170,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
             Stroke = Colors.DodgerBlue,
         });
         GetAudioDevices();
-
     }
     /// <summary>
     /// Инициализация контроллера для записи микрофона
@@ -192,26 +206,18 @@ public class MainWindowViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Рисуем график из файла
+    /// Рисуем график по массивам точек
     /// </summary>
-    /// <param name="filename"></param>
-    public void DrawFileGraph(string filename)
+    /// <param name="xArray"></param>
+    /// <param name="yArray"></param>
+    /// <param name="maxX">Максимальное время для отображения графика</param>
+    public void DrawFileGraph(SampleFileModel fileData)
     {
-        var strArray = File.ReadAllLines(filename);
-        var samples = strArray.Select(x => x.ToFileRecordModel());
-        var maxX = samples.Last().Time;    
-        var arrays = samples.Select(x => new
-        {
-            X = new TimeSpanDataPoint(x.Time),
-            Y = new DoubleDataPoint(x.Sample)
-        }).OrderBy(x=>x.X).ToArray();
-        var xArray = arrays.Select(x => x.X).ToArray();
-        var yArray = arrays.Select(x => x.Y).ToArray();
         Controller.Clear();
-        Controller.Range.MaximumX = maxX;
+        Controller.Range.MaximumX = fileData.MaxX;
         Controller.Range.MinimumY = -33000;
         Controller.Range.MaximumY = 33000;
-        Controller.PushData(xArray, yArray);
+        Controller.PushData(fileData.XArray, fileData.YArray);
     }
 
     /// <summary>

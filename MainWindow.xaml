@@ -47,7 +47,7 @@
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
                         <Button Content="Открыть" Margin="20,10,0,10" Height="21" Click="OpenFileButtonClick"></Button>
                         <Button Content="Записать" Margin="10,10,0,10" IsEnabled="{Binding IsFileOpened}" Height="21" Click="RecordFileButtonClick"></Button>
-                        <CheckBox IsEnabled="False" IsThreeState="False" x:Name="needForRightChannelCheckBox" IsChecked="False" Height="20" Content="Раздельно записать каналы стерео файла" Margin="20,0,0,-4" ToolTip="Если файл содержит два канала, будет создано два файла: один под левый канал, другой под правый"/>
+                        <CheckBox IsEnabled="{Binding Path=NeedForRightChannel, Mode=TwoWay}" IsThreeState="False" x:Name="needForRightChannelCheckBox" IsChecked="{Binding WriteRightChannel}" Height="20" Content="Раздельно записать каналы стерео файла" Margin="20,0,0,-4" ToolTip="Если файл содержит два канала, будет создано два файла: один под левый канал, другой под правый"/>
                     </StackPanel>
                 </TabItem>
                 <TabItem Header="Загрузка из файла амплитуд">

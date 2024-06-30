@@ -24,4 +24,8 @@ public class AudioDevice
         Id = index;
         Name = caps.ProductName;
     }
+
+    public AudioDevice()
+    {
+    }
 }
