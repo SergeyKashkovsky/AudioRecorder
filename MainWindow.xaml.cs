@@ -214,8 +214,11 @@ namespace AudioRecorder
             {
                 var dialogService = new DefaultDialogService();
                 if (!dialogService.OpenFileDialog(false)) return;
-                _viewModel.DrawFileGraph(dialogService.FilePath);
+                _viewModel.StatusText = string.Format("Читаю файл {0}", dialogService.FilePath);
                 _viewModel.SampleFileParams = string.Format("{0} ({1})", dialogService.FilePath, AudioService.GetSampleFileAudioParams(dialogService.FilePath));
+                _viewModel.DrawFileGraph(dialogService.FilePath);
+                _viewModel.StatusText = string.Format("Файл {0} прочитан", dialogService.FilePath);
+
             }
             catch (Exception ex)
             {

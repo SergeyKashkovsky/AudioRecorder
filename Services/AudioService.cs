@@ -1,8 +1,10 @@
 ﻿using AudioRecorder.Constants;
 using AudioRecorder.Extensions;
 using AudioRecorder.Interfaces;
+using AudioRecorder.Models;
 using NAudio.MediaFoundation;
 using NAudio.Wave;
+using RealTimeGraphX.DataPoints;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -110,10 +112,33 @@ public class AudioService
     /// <returns></returns>
     public static WaveFormat GetSampleFileAudioParams(string filename) 
     {
-        var file = File.ReadAllLines(filename);
-        var lastString = file.Last().ToFileRecordModel().Time.Ticks;
-        var averageSampleTicks = lastString / file.Length;
-        var sampleRate = AudioDefaults._ticksPerSecond / averageSampleTicks;
+        using var reader = new StreamReader(filename);
+        var firstString = reader.ReadLine()!.ToFileRecordModel().Time.Ticks;
+        var sampleRate = AudioDefaults._ticksPerSecond / firstString;
         return new WaveFormat((int)sampleRate, 1);
+    }
+    /// <summary>
+    /// Читаем данные из файла
+    /// </summary>
+    /// <param name="filename"></param>
+    /// <returns></returns>
+    public static SampleFileModel ReadFileData(string filename)
+    {
+        var strArray = File.ReadAllLines(filename);
+        var samples = strArray.Select(x => x.ToFileRecordModel());
+        var maxX = samples.Last().Time;
+        var arrays = samples.Select(x => new
+        {
+            X = new TimeSpanDataPoint(x.Time),
+            Y = new DoubleDataPoint(x.Sample)
+        }).OrderBy(x => x.X);
+
+        return new SampleFileModel
+        {
+            XArray = arrays.Select(x => x.X).ToArray(),
+            YArray = arrays.Select(x => x.Y).ToArray(),
+            MaxX = maxX
+        };
+        
     }
 }
