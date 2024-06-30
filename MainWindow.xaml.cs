@@ -1,11 +1,5 @@
-﻿using AudioRecorder.Constants;
-using AudioRecorder.Extensions;
-using AudioRecorder.Models;
+﻿using AudioRecorder.Models;
 using AudioRecorder.Services;
-using NAudio.Wave;
-using RealTimeGraphX.DataPoints;
-using RealTimeGraphX.WPF;
-using System.IO;
 using System.Windows;
 
 namespace AudioRecorder
@@ -15,7 +9,6 @@ namespace AudioRecorder
     /// </summary>
     public partial class MainWindow : Window
     {
-        private string? _fileName; //TODO: перенести в модель представления
         private readonly MainWindowViewModel _viewModel;
         private readonly AudioService _audioService;
 
@@ -36,8 +29,8 @@ namespace AudioRecorder
         {
             
             var dialogService = new DefaultDialogService();
-            _fileName = dialogService.SaveFileDialog();
-            _audioService.BeginMicrophoneRecord(_fileName);
+            var fileName = dialogService.SaveFileDialog();
+            _audioService.BeginMicrophoneRecord(fileName);
         }
 
         /// <summary>

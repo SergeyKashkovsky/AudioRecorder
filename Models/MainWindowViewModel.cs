@@ -1,17 +1,8 @@
-﻿using AudioRecorder.Extensions;
-using AudioRecorder.Interfaces;
-using AudioRecorder.Services;
-using NAudio.Wave;
-using RealTimeGraphX;
+﻿using NAudio.Wave;
 using RealTimeGraphX.DataPoints;
-using RealTimeGraphX.Renderers;
 using RealTimeGraphX.WPF;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using System.Windows;
 using System.Windows.Media;
 
 namespace AudioRecorder.Models;

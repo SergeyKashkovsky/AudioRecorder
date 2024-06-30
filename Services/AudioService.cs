@@ -1,18 +1,9 @@
 ﻿using AudioRecorder.Constants;
 using AudioRecorder.Extensions;
-using AudioRecorder.Interfaces;
 using AudioRecorder.Models;
-using NAudio.MediaFoundation;
 using NAudio.Wave;
 using RealTimeGraphX.DataPoints;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Windows.Forms.DataFormats;
 
 namespace AudioRecorder.Services;
 
@@ -33,6 +24,7 @@ public class AudioService
     {
         _viewModel = viewModel;
     }
+
     #region Функционал записи из микрофона
     /// <summary>
     /// Начинаем писать микрофон
